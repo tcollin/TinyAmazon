@@ -1,0 +1,239 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="bower_components/paper-card/paper-card.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="bower_components/iron-form/iron-form.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="bower_components/neon-animation/animations/fade-out-animation.html">
+
+<dom-module id="tiny-book-card">
+
+    <template>
+        <style media="screen">
+            :host {
+                width: 100%;
+                position: relative;
+                display: block;
+            }
+            
+            paper-card.book-card {
+                margin: 3px;
+                height: 120px;
+                box-sizing: border-box;
+            }
+            
+            @media (min-width: 300px) {
+                paper-card.book-card {
+                    width: 98%;
+                }
+            }
+            
+            @media (min-width: 700px) {
+                paper-card.book-card {
+                    width: 48.5%;
+                }
+            }
+            
+            @media (min-width: 1024px) {
+                paper-card.book-card {
+                    width: 32%;
+                }
+            }
+            
+            div.book-card-cover {
+                min-width: 120px;
+                height: 120px;
+                display: inline-block;
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-color: #dde;
+                background-position-x: center;
+            }
+            
+            div.book-card-info {
+                height: 100%;
+                display: inline-block;
+                padding-right: 10px;
+                text-align: right;
+            }
+            
+            div.book-card-info-title {
+                font-weight: bold;
+            }
+            
+            div.book-list-content {
+                position: relative;
+                width: 100%;
+                justify-content: space-around;
+            }
+            
+            paper-button.custom {
+                --paper-button-ink-color: var(--paper-pink-a200);
+                --paper-button-flat-keyboard-focus: {
+                    background-color: var(--paper-pink-a200);
+                    color: white !important;
+                }
+                ;
+                --paper-button-raised-keyboard-focus: {
+                    background-color: var(--paper-pink-a200) !important;
+                    color: white !important;
+                }
+                ;
+            }
+            
+            paper-button.custom:hover {
+                background-color: var(--paper-indigo-100);
+            }
+            
+            paper-button.pink {
+                color: var(--paper-pink-a200);
+            }
+            
+            paper-button.indigo {
+                background-color: var(--paper-indigo-500);
+                color: white;
+                --paper-button-raised-keyboard-focus: {
+                    background-color: var(--paper-pink-a200) !important;
+                    color: white !important;
+                }
+                ;
+            }
+            
+            paper-button.green {
+                background-color: var(--paper-green-500);
+                color: white;
+            }
+            
+            paper-button.green[active] {
+                background-color: var(--paper-red-500);
+            }
+            
+            paper-button.disabled {
+                color: white;
+            }
+        </style>
+
+        <div class="book-list-content flex layout horizontal wrap around-justified">
+            <div class="book-card-cover" style="background-image: url(data:image/jpeg;base64,{{img.data}})"></div>
+            <div class="book-card-info flex vertical">
+                <div class="book-card-info-title">{{title}}</div>
+                <div class="book-card-info-author">{{author}}</div>
+                <div class="book-card-info-price">{{price}}&euro;</div>
+
+                <paper-button class="pink" onclick="_delete(this)" id={{idbook}} name={{rev}}>Supprimer</paper-button>
+                <paper-button raised class="indigo" onclick="_modal(this)" name={{rev}}>Modifier</paper-button>
+
+                <paper-dialog id="{{rev}}" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop>
+                    <h2>Modification</h2>
+
+                    <form is="iron-form" method="get" action="/" id="presubmit">
+                        <paper-input name="Title" label="Title" value="{{title}}" required></paper-input>
+                        <paper-input name="Author" label="Author" value="{{author}}" required></paper-input>
+                        <paper-input name="Price" label="Price" value="{{price}}" required></paper-input>
+                        <paper-input name="rev" value={{rev}} hidden></paper-input>
+                        <paper-input name="id" value={{idbook}} hidden></paper-input>
+                        <paper-input name="image" value={{img}} hidden></paper-input>
+                        <paper-button raised onclick="_submit(this)">Envoyer</paper-button>
+                        <paper-button raised onclick="_reset(event)">Réinitialiser</paper-button>
+                        <div class="output"></div>
+                    </form>
+
+                </paper-dialog>
+            </div>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: "tiny-book-card",
+            properties: {
+                title: {
+                    type: String,
+                    notify: true
+                },
+                author: {
+                    type: String,
+                    notify: true
+                },
+                price: {
+                    type: String,
+                    notify: true
+                },
+                idbook: {
+                    type: String,
+                    notify: true
+                },
+                img: {
+                    type: Array,
+                    notify: true
+                }
+            },
+            get_id: function () { // retourne l'id du livre
+                return this.idbook
+            },
+            get_image: function () { // retourne la liste 'img' du livre
+                return this.img
+            }
+
+        })
+
+        // supprime d'un livre/carte
+        function _delete(self) {
+            var x = document.querySelector("tiny-pouchdb");
+            x._deleteElem(self.id, self.name)
+            var x = document.querySelectorAll("tiny-book-card");
+            for (var i = 0; i < x.length; i++) {
+                var r = x[i]
+                if (r.get_id() == self.id) {
+                    break;
+                }
+            }
+            window.setTimeout(reload, 300)
+        }
+
+        function reload() {
+            window.location.href = "";
+        }
+
+        // fonction pour ouvrir le modal
+        function _modal(self) {
+            var x = document.querySelectorAll("paper-dialog");
+            for (var i = 0; i < x.length; i++) {
+                var r = x[i]
+                if (r.id == self.name) {
+                    break
+                }
+            }
+            r.open()
+        }
+
+        function _reset(event) {
+            var form = Polymer.dom(event).localTarget.parentElement
+            form.reset();
+            form.querySelector('.output').innerHTML = '';
+        }
+
+
+        function _submit(self) {
+            var title = self.parentElement.Title.value
+            var author = self.parentElement.Author.value
+            var price = self.parentElement.Price.value
+            var rev = self.parentElement.rev.value
+            var id = self.parentElement.id.value
+            var x = document.querySelectorAll("tiny-book-card");
+            for (var i = 0; i < x.length; i++) {
+                var r = x[i]
+                if (r.get_id() == id) {
+                    image = r.get_image();
+                    break;
+                }
+            }
+            var x = document.querySelector("tiny-pouchdb");
+            x._updateElem(title, author, price, rev, id, image)
+            self.parentElement.parentElement.close()
+
+        }
+    </script>
+</dom-module>

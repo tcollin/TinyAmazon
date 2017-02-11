@@ -1,0 +1,98 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<script src="bower_components/pouchdb/dist/pouchdb.min.js"></script>
+<dom-module id="tiny-pouchdb">
+    <template>
+        <style>
+            :host {
+                display: none;
+            }
+        </style>
+    </template>
+    <script>
+        Polymer({
+            is: "tiny-pouchdb",
+
+            properties: {
+
+                name: {
+                    type: String,
+                    reflectToAttribute: true,
+                    notify: true,
+                    value: "NO-NAME"
+                },
+
+                initsrc: {
+                    type: String
+                },
+
+                db: {
+                    type: Object,
+                    notify: true,
+                    value: null,
+                    observer: "_reload_books"
+                },
+
+                books: {
+                    type: Array,
+                    notify: true,
+                    value: []
+                }
+            },
+
+            _reload_books: function () {
+                if (!this.db) return;
+                this.db.info()
+                    .then(r => {
+                        if (r.update_seq === 0) {
+                            this._init_db_and_load_books()
+                        } else {
+                            this._load_books();
+                        }
+                    })
+            },
+
+            _load_books: function () {
+                this.db.allDocs({
+                        include_docs: true
+                    })
+                    .then(r => this.books = r.rows.map(b => b.doc));
+            },
+
+            _init_db_and_load_books: function () {
+                fetch(this.initsrc)
+                    .then(rep => rep.json().then(
+                        v => this.db.bulkDocs(v).then(
+                            _ => this._load_books())));
+            },
+
+
+            _deleteElem: function (id, rev) {
+                this.db.remove(id, rev, function (err) {
+                    if (err) {
+                        return console.log(err);
+                    } else {
+                        console.log("Document deleted successfully");
+                    }
+                });
+            },
+
+
+            _updateElem: function (title, author, price, rev, id, image) {
+                var doc = {
+                    _id: id,
+                    _rev: rev,
+                    title: title,
+                    price: price,
+                    author: author,
+                    img: image,
+                }
+                this.db.put(doc)
+            },
+
+            ready: function () {
+                const db = new PouchDB(this.name);
+                db.info().then(_ => this.db = db)
+            }
+        });
+    </script>
+</dom-module>

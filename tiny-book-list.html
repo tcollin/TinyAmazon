@@ -1,0 +1,97 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-card/paper-card.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="tiny-book-card.html">
+<dom-module id="tiny-book-list">
+    <template>
+        <style include="iron-flex iron-flex-layout"></style>
+        <style>
+            :host {
+                width: 100%;
+                position: relative;
+                display: block;
+            }
+            
+            paper-card.book-card {
+                margin: 3px;
+                height: 120px;
+                box-sizing: border-box;
+            }
+            
+            @media (min-width: 300px) {
+                paper-card.book-card {
+                    width: 98%;
+                }
+            }
+            
+            @media (min-width: 700px) {
+                paper-card.book-card {
+                    width: 48.5%;
+                }
+            }
+            
+            @media (min-width: 1024px) {
+                paper-card.book-card {
+                    width: 32%;
+                }
+            }
+            
+            div.book-card-cover {
+                min-width: 120px;
+                display: inline-block;
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-color: #dde;
+                background-position-x: center;
+            }
+            
+            div.book-card-info {
+                height: 100%;
+                display: inline-block;
+                padding-right: 10px;
+                text-align: right;
+            }
+            
+            div.book-card-info-title {
+                font-weight: bold;
+            }
+            
+            div.book-list-content {
+                position: relative;
+                width: 100%;
+                justify-content: space-around;
+            }
+        </style>
+        <div class="book-list-content flex layout horizontal wrap around-justified">
+            <template is="dom-repeat" items="{{books}}" id="book_template">
+                <paper-card class="book-card layout horizontal">
+                    <tiny-book-card img={{item.img}} title={{item.title}} price={{item.price}} author={{item.author}} idbook="{{item._id}}" rev="{{item._rev}}"></tiny-book-card>
+                </paper-card>
+            </template>
+        </div>
+        <mercury-paginator perpage="21" show-first=true show-last=true items="{{books}}">
+        </mercury-paginator>
+    </template>
+    <script>
+        Polymer({
+            is: "tiny-book-list",
+            properties: {
+                books: {
+                    type: Array,
+                    notify: true,
+                },
+                ready: function () {
+                    paginate()
+                },
+            }
+        })
+        window.setTimeout(paginate, 300);
+
+        function paginate() {
+            var x = document.querySelector("mercury-paginator");
+            var y = document.querySelector("tiny-book-list");
+            x.data = y.books
+        }
+    </script>
+</dom-module>
